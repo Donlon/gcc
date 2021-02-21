@@ -1,6 +1,7 @@
 /* PR tree-optimization/83605 */
 /* { dg-do compile } */
 /* { dg-options "-O1 -ftrapv -fexceptions -fnon-call-exceptions" } */
+/* { dg-require-effective-target trapping } */
 
 int a;
 

@@ -24,8 +24,8 @@ void foo1 (size_t len, size_t len2, size_t len3)
   char *s = alloca (123);
   useit (s);			// OK, constant argument to alloca
 
-  s = alloca (num);		// { dg-warning "large due to conversion" "" { target lp64 } }
-  // { dg-warning "unbounded use of 'alloca'" "" { target { ! lp64 } } .-1 }
+  s = alloca (num);		// { dg-warning "large due to conversion" "" { target { { lp64 } || { msp430_large_memory_model } } } }
+  // { dg-warning "unbounded use of 'alloca'" "" { target { { ! lp64 } && { ! msp430_large_memory_model } } } .-1 }
   useit (s);
 
   s = alloca (30000);		/* { dg-warning "is too large" } */

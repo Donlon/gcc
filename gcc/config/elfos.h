@@ -278,6 +278,7 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
   do								\
     {								\
       ASM_OUTPUT_TYPE_DIRECTIVE (FILE, NAME, "function");	\
+      ASM_OUTPUT_SYM_META_INFO (FILE, NAME, DECL);		\
       ASM_DECLARE_RESULT (FILE, DECL_RESULT (DECL));		\
       ASM_OUTPUT_FUNCTION_LABEL (FILE, NAME, DECL);		\
     }								\
@@ -294,6 +295,7 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
   do								\
     {								\
       ASM_OUTPUT_TYPE_DIRECTIVE (FILE, NAME, "function");	\
+      ASM_OUTPUT_SYM_META_INFO (FILE, NAME, DECL);		\
       ASM_DECLARE_RESULT (FILE, DECL_RESULT (DECL));		\
       ASM_OUTPUT_FUNCTION_LABEL (FILE, NAME, DECL);		\
     }								\
@@ -324,6 +326,8 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
       else								\
 	ASM_OUTPUT_TYPE_DIRECTIVE (FILE, NAME, "object");		\
 									\
+      ASM_OUTPUT_SYM_META_INFO (FILE, NAME, DECL);			\
+									\
       size_directive_output = 0;					\
       if (!flag_inhibit_size_directive					\
 	  && (DECL) && DECL_SIZE (DECL))				\
@@ -332,7 +336,7 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 	  size = tree_to_uhwi (DECL_SIZE_UNIT (DECL));			\
 	  ASM_OUTPUT_SIZE_DIRECTIVE (FILE, NAME, size);			\
 	}								\
-									\
+      \
       ASM_OUTPUT_LABEL (FILE, NAME);					\
     }									\
   while (0)

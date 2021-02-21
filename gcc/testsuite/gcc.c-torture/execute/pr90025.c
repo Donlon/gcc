@@ -16,7 +16,11 @@ __attribute__((noipa)) void
 foo (unsigned int x)
 {
   char s[32] = { 'f', 'o', 'o', 'b', 'a', 'r', 0 };
+#if __SIZEOF_INT__ == 2
+  ((unsigned long *) s)[2] = __builtin_bswap32 (x);
+#else
   ((unsigned int *) s)[2] = __builtin_bswap32 (x);
+#endif
   bar (s);
 }
 

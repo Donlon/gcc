@@ -1,9 +1,7 @@
 /* PR/86662 */
 
 /* { dg-do link } */
-/* -nostdlib prevents link errors due to mismatched code models for
-   libgloss objects.  */
-/* { dg-options "-mlarge -flto -nostdlib" } */
+/* { dg-options "-mlarge -flto" } */
 /* { dg-skip-if "" { *-*-* } { "-mcpu=msp430" } } */
 
 int main(void)

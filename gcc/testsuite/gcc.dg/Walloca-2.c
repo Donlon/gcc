@@ -13,7 +13,7 @@ g1 (int n)
     // 32-bit targets because VRP is not giving us any range info for
     // the argument to __builtin_alloca.  This should be fixed by the
     // upcoming range work.
-    p = __builtin_alloca (n); // { dg-bogus "unbounded use of 'alloca'" "" { xfail { ! lp64 } } }
+    p = __builtin_alloca (n); // { dg-bogus "unbounded use of 'alloca'" "" { xfail { { ! lp64 } && { ! msp430_large_memory_model } } } }
   else
     p = __builtin_malloc (n);
   f (p);
@@ -36,9 +36,9 @@ g3 (int n)
   void *p;
   if (n > 0 && n < 3000)
     {
-      p = __builtin_alloca (n); // { dg-warning "'alloca' may be too large" "" { target lp64} }
-      // { dg-message "note:.*argument may be as large as 2999" "note" { target lp64 } .-1 }
-      // { dg-warning "unbounded use of 'alloca'" "" { target { ! lp64 } } .-2 }
+      p = __builtin_alloca (n); // { dg-warning "'alloca' may be too large" "" { target { lp64 || msp430_large_memory_model } } }
+      // { dg-message "note:.*argument may be as large as 2999" "note" { target { lp64 || msp430_large_memory_model } } .-1 }
+      // { dg-warning "unbounded use of 'alloca'" "" { target { { ! lp64 } && { ! msp430_large_memory_model } } } .-2 }
     }
   else
     p = __builtin_malloc (n);

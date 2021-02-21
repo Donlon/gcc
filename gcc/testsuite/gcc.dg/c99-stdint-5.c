@@ -2,7 +2,7 @@
    with any system header (which GCC will use by default for hosted
    compilations).  */
 /* { dg-do compile } */
-/* { dg-options "-std=iso9899:1999 -pedantic-errors" } */
+/* { dg-options "-std=iso9899:1999" } */
 /* { dg-additional-options "-DSIGNAL_SUPPRESS" { target { ! signal } } } */
 
 #include <stdint.h>

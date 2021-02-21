@@ -18,6 +18,8 @@ long *c;
 #define ZERO 0L
 #elif defined(_WIN64)
 #define ZERO 0LL
+#elif defined(__MSP430X_LARGE__)
+#define ZERO (__int20)0
 #else
 #define ZERO 0
 #endif

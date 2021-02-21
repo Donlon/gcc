@@ -1,5 +1,6 @@
 // { dg-do compile }
 // { dg-options "-O2 -fdump-tree-ivopts-details" }
+// { dg-require-effective-target exceptions_enabled }
 
 class MinimalVec3
 {

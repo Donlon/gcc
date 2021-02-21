@@ -1,5 +1,6 @@
 // { dg-do compile }
 // { dg-options "-O2 -fdump-tree-fre3 -fdump-tree-optimized -fdelete-null-pointer-checks" }
+// { dg-skip-if "" { keeps_null_pointer_checks } }
 
 #define assume(x) if(!(x))__builtin_unreachable()
 

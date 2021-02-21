@@ -136,8 +136,10 @@ call_ ## FUNC (void)					\
 #  error "Can't use explicit exception-frame-registration without __LIBGCC_EH_FRAME_SECTION_NAME__"
 # endif
 #endif
-#if defined(__LIBGCC_EH_FRAME_SECTION_NAME__) && (!defined(USE_PT_GNU_EH_FRAME) || defined(USE_EH_FRAME_REGISTRY_ALWAYS))
-# define USE_EH_FRAME_REGISTRY
+#if !defined(USE_EH_FRAME_REGISTRY) && (defined(__LIBGCC_EH_FRAME_SECTION_NAME__) && (!defined(USE_PT_GNU_EH_FRAME) || defined(USE_EH_FRAME_REGISTRY_ALWAYS)))
+# define USE_EH_FRAME_REGISTRY 1
+#elif !defined(USE_EH_FRAME_REGISTRY)
+# define USE_EH_FRAME_REGISTRY 0
 #endif
 #if defined(__LIBGCC_EH_FRAME_SECTION_NAME__) \
     && __LIBGCC_EH_TABLES_CAN_BE_READ_ONLY__
@@ -233,11 +235,11 @@ CTOR_LIST_BEGIN;
 static func_ptr force_to_data[1] __attribute__ ((__used__)) = { };
 asm (__LIBGCC_CTORS_SECTION_ASM_OP__);
 STATIC func_ptr __CTOR_LIST__[1]
-  __attribute__ ((__used__, aligned(sizeof(func_ptr))))
+  __attribute__ ((__used__, aligned(__alignof__(func_ptr))))
   = { (func_ptr) (-1) };
 #else
 STATIC func_ptr __CTOR_LIST__[1]
-  __attribute__ ((__used__, section(".ctors"), aligned(sizeof(func_ptr))))
+  __attribute__ ((__used__, section(".ctors"), aligned(__alignof__(func_ptr))))
   = { (func_ptr) (-1) };
 #endif /* __CTOR_LIST__ alternatives */
 
@@ -246,16 +248,16 @@ DTOR_LIST_BEGIN;
 #elif defined(__LIBGCC_DTORS_SECTION_ASM_OP__)
 asm (__LIBGCC_DTORS_SECTION_ASM_OP__);
 STATIC func_ptr __DTOR_LIST__[1]
-  __attribute__ ((aligned(sizeof(func_ptr))))
+  __attribute__ ((aligned(__alignof__(func_ptr))))
   = { (func_ptr) (-1) };
 #else
 STATIC func_ptr __DTOR_LIST__[1]
-  __attribute__((section(".dtors"), aligned(sizeof(func_ptr))))
+  __attribute__((section(".dtors"), aligned(__alignof__(func_ptr))))
   = { (func_ptr) (-1) };
 #endif /* __DTOR_LIST__ alternatives */
 #endif /* USE_INITFINI_ARRAY */
 
-#ifdef USE_EH_FRAME_REGISTRY
+#if USE_EH_FRAME_REGISTRY
 /* Stick a label at the beginning of the frame unwind info so we can register
    and deregister it with the exception handling library code.  */
 STATIC EH_FRAME_SECTION_CONST char __EH_FRAME_BEGIN__[]
@@ -265,7 +267,7 @@ STATIC EH_FRAME_SECTION_CONST char __EH_FRAME_BEGIN__[]
 
 #if USE_TM_CLONE_REGISTRY
 STATIC func_ptr __TMC_LIST__[]
-  __attribute__((used, section(".tm_clone_table"), aligned(sizeof(void*))))
+  __attribute__((used, section(".tm_clone_table"), aligned(__alignof__(void*))))
   = { };
 # ifdef HAVE_GAS_HIDDEN
 extern func_ptr __TMC_END__[] __attribute__((__visibility__ ("hidden")));
@@ -327,8 +329,11 @@ register_tm_clones (void)
    in every shared-object; in a main program its value is zero.  The
    object should in any case be protected.  This means the instance
    in one DSO or the main program is not used in another object.  The
-   dynamic linker takes care of this.  */
+   dynamic linker takes care of this.
+   Defining NO_DSO_HANDLE will remove the declaration of __dso_handle here.
+   __cxa_atexit cannot be used if __dso_handle is not declared.  */
 
+#ifndef NO_DSO_HANDLE
 #ifdef TARGET_LIBGCC_SDATA_SECTION
 extern void *__dso_handle __attribute__ ((__section__ (TARGET_LIBGCC_SDATA_SECTION)));
 #endif
@@ -340,6 +345,7 @@ void *__dso_handle = &__dso_handle;
 #else
 void *__dso_handle = 0;
 #endif
+#endif /* !NO_DSO_HANDLE */
 
 /* The __cxa_finalize function may not be available so we use only a
    weak declaration.  */
@@ -364,6 +370,10 @@ extern void __cxa_finalize (void *) TARGET_ATTRIBUTE_WEAK;
    the list we left off processing, and we resume at that point,
    should we be re-invoked.  */
 
+/* If none of these clauses are true, then __do_global_dtors_aux will not do
+   anything, so can be removed.  */
+#if defined(CRTSTUFFS_O) || !defined(FINI_ARRAY_SECTION_ASM_OP) \
+  || USE_TM_CLONE_REGISTRY || USE_EH_FRAME_REGISTRY
 static void __attribute__((used))
 __do_global_dtors_aux (void)
 {
@@ -410,7 +420,7 @@ __do_global_dtors_aux (void)
   deregister_tm_clones ();
 #endif /* USE_TM_CLONE_REGISTRY */
 
-#ifdef USE_EH_FRAME_REGISTRY
+#if USE_EH_FRAME_REGISTRY
 #ifdef CRT_GET_RFIB_DATA
   /* If we used the new __register_frame_info_bases interface,
      make sure that we deregister from the same place.  */
@@ -430,8 +440,8 @@ __do_global_dtors_aux (void)
 CRT_CALL_STATIC_FUNCTION (FINI_SECTION_ASM_OP, __do_global_dtors_aux)
 #elif defined (FINI_ARRAY_SECTION_ASM_OP)
 static func_ptr __do_global_dtors_aux_fini_array_entry[]
-  __attribute__ ((__used__, section(".fini_array"), aligned(sizeof(func_ptr))))
-  = { __do_global_dtors_aux };
+  __attribute__ ((__used__, section(".fini_array"),
+		  aligned(__alignof__(func_ptr)))) = { __do_global_dtors_aux };
 #else /* !FINI_SECTION_ASM_OP && !FINI_ARRAY_SECTION_ASM_OP */
 static void __attribute__((used))
 __do_global_dtors_aux_1 (void)
@@ -441,9 +451,11 @@ __do_global_dtors_aux_1 (void)
 CRT_CALL_STATIC_FUNCTION (__LIBGCC_INIT_SECTION_ASM_OP__,
 			  __do_global_dtors_aux_1)
 #endif
+#endif /* defined(CRTSTUFFS_O) || !defined(FINI_ARRAY_SECTION_ASM_OP)
+  || defined(USE_TM_CLONE_REGISTRY) || defined(USE_EH_FRAME_REGISTRY) */
 
-#if defined(USE_EH_FRAME_REGISTRY) \
-    || defined(USE_TM_CLONE_REGISTRY)
+
+#if USE_EH_FRAME_REGISTRY || USE_TM_CLONE_REGISTRY
 /* Stick a call to __register_frame_info into the .init section.  For some
    reason calls with no arguments work more reliably in .init, so stick the
    call in another function.  */
@@ -451,7 +463,7 @@ CRT_CALL_STATIC_FUNCTION (__LIBGCC_INIT_SECTION_ASM_OP__,
 static void __attribute__((used))
 frame_dummy (void)
 {
-#ifdef USE_EH_FRAME_REGISTRY
+#if USE_EH_FRAME_REGISTRY
   static struct object object;
 #ifdef CRT_GET_RFIB_DATA
   void *tbase, *dbase;
@@ -474,8 +486,8 @@ frame_dummy (void)
 CRT_CALL_STATIC_FUNCTION (__LIBGCC_INIT_SECTION_ASM_OP__, frame_dummy)
 #else /* defined(__LIBGCC_INIT_SECTION_ASM_OP__) */
 static func_ptr __frame_dummy_init_array_entry[]
-  __attribute__ ((__used__, section(".init_array"), aligned(sizeof(func_ptr))))
-  = { frame_dummy };
+  __attribute__ ((__used__, section(".init_array"),
+		  aligned(__alignof__(func_ptr)))) = { frame_dummy };
 #endif /* !defined(__LIBGCC_INIT_SECTION_ASM_OP__) */
 #endif /* USE_EH_FRAME_REGISTRY || USE_TM_CLONE_REGISTRY */
 
@@ -538,14 +550,13 @@ __do_global_dtors (void)
   deregister_tm_clones ();
 #endif /* USE_TM_CLONE_REGISTRY */
 
-#ifdef USE_EH_FRAME_REGISTRY
+#if USE_EH_FRAME_REGISTRY
   if (__deregister_frame_info)
     __deregister_frame_info (__EH_FRAME_BEGIN__);
 #endif
 }
 
-#if defined(USE_EH_FRAME_REGISTRY) \
-    || defined(USE_TM_CLONE_REGISTRY)
+#if USE_EH_FRAME_REGISTRY || USE_TM_CLONE_REGISTRY
 /* A helper function for __do_global_ctors, which is in crtend.o.  Here
    in crtbegin.o, we can reference a couple of symbols not visible there.
    Plus, since we're before libgcc.a, we have no problems referencing
@@ -553,7 +564,7 @@ __do_global_dtors (void)
 void
 __do_global_ctors_1(void)
 {
-#ifdef USE_EH_FRAME_REGISTRY
+#if USE_EH_FRAME_REGISTRY
   static struct object object;
   if (__register_frame_info)
     __register_frame_info (__EH_FRAME_BEGIN__, &object);
@@ -588,11 +599,11 @@ CTOR_LIST_END;
 static func_ptr force_to_data[1] __attribute__ ((__used__)) = { };
 asm (__LIBGCC_CTORS_SECTION_ASM_OP__);
 STATIC func_ptr __CTOR_END__[1]
-  __attribute__((aligned(sizeof(func_ptr))))
+  __attribute__((aligned(__alignof__(func_ptr))))
   = { (func_ptr) 0 };
 #else
 STATIC func_ptr __CTOR_END__[1]
-  __attribute__((section(".ctors"), aligned(sizeof(func_ptr))))
+  __attribute__((section(".ctors"), aligned(__alignof__(func_ptr))))
   = { (func_ptr) 0 };
 #endif
 
@@ -607,16 +618,16 @@ func_ptr __DTOR_END__[1]
 #ifndef __LIBGCC_DTORS_SECTION_ASM_OP__
 		  section(".dtors"),
 #endif
-		  aligned(sizeof(func_ptr)), visibility ("hidden")))
+		  aligned(__alignof__(func_ptr)), visibility ("hidden")))
   = { (func_ptr) 0 };
 #elif defined(__LIBGCC_DTORS_SECTION_ASM_OP__)
 asm (__LIBGCC_DTORS_SECTION_ASM_OP__);
 STATIC func_ptr __DTOR_END__[1]
-  __attribute__ ((used, aligned(sizeof(func_ptr))))
+  __attribute__ ((used, aligned(__alignof__(func_ptr))))
   = { (func_ptr) 0 };
 #else
 STATIC func_ptr __DTOR_END__[1]
-  __attribute__((used, section(".dtors"), aligned(sizeof(func_ptr))))
+  __attribute__((used, section(".dtors"), aligned(__alignof__(func_ptr))))
   = { (func_ptr) 0 };
 #endif
 #endif /* USE_INITFINI_ARRAY */
@@ -635,7 +646,7 @@ typedef short int32;
 # endif
 STATIC EH_FRAME_SECTION_CONST int32 __FRAME_END__[]
      __attribute__ ((used, section(__LIBGCC_EH_FRAME_SECTION_NAME__),
-		     aligned(sizeof(int32))))
+		     aligned(__alignof__(int32))))
      = { 0 };
 #endif /* __LIBGCC_EH_FRAME_SECTION_NAME__ */
 
@@ -644,7 +655,8 @@ STATIC EH_FRAME_SECTION_CONST int32 __FRAME_END__[]
 static
 # endif
 func_ptr __TMC_END__[]
-  __attribute__((used, section(".tm_clone_table"), aligned(sizeof(void *))))
+  __attribute__((used, section(".tm_clone_table"),
+		 aligned(__alignof__(void *))))
 # ifdef HAVE_GAS_HIDDEN
   __attribute__((__visibility__ ("hidden"))) = { };
 # else
@@ -716,8 +728,7 @@ void
 __do_global_ctors (void)
 {
   func_ptr *p;
-#if defined(USE_EH_FRAME_REGISTRY) \
-    || defined(USE_TM_CLONE_REGISTRY)
+#if USE_EH_FRAME_REGISTRY || USE_TM_CLONE_REGISTRY
   __do_global_ctors_1();
 #endif
   for (p = __CTOR_END__ - 1; *p != (func_ptr) -1; p--)

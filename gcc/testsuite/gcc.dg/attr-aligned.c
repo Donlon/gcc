@@ -18,6 +18,10 @@
 #  define ALIGN_MAX_STATIC      2
 /* Work around a pdp11 ICE (see PR target/87821).  */
 #  define ALIGN_MAX_AUTO        (ALIGN_MAX_HARD >> 14)
+#elif __MSP430__
+#  define ALIGN_MAX_STATIC      __BIGGEST_ALIGNMENT__
+#  define ALIGN_TOO_BIG_OFILE   (ALIGN_MAX_HARD << 1)
+#  define ALIGN_MAX_AUTO        (ALIGN_MAX_HARD >> 14)
 #elif __powerpc64__ || __x86_64__
 /* Is this processor- or operating-system specific?  */
 #  define ALIGN_MAX_STATIC      ALIGN_MAX_HARD

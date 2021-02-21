@@ -1,6 +1,7 @@
 // PR rtl-optimization/50212
 // { dg-do compile }
 // { dg-require-effective-target freorder }
+// { dg-require-effective-target trapping }
 // { dg-options "-O -fnon-call-exceptions -ftrapv -freorder-blocks-and-partition" }
 
 void

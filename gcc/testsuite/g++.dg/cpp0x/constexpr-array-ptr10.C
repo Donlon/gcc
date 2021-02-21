@@ -9,6 +9,7 @@
 
 // { dg-do compile { target c++11 } }
 // { dg-additional-options "-Wall -Wextra -fdelete-null-pointer-checks" }
+// { dg-skip-if "" keeps_null_pointer_checks }
 
 namespace A {
 

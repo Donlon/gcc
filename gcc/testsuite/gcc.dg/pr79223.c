@@ -2,7 +2,7 @@
    { dg-do compile }
    { dg-additional-options "-O2 -Wall -Wno-array-bounds -std=gnu99" }  */
 
-typedef __SIZE_TYPE__ size_t;
+__extension__ typedef __SIZE_TYPE__ size_t;
 
 extern void* memcpy (void*, const void*, size_t);
 extern void* mempcpy (void*, const void*, size_t);

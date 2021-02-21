@@ -1,5 +1,6 @@
 /* { dg-do compile } */
 /* { dg-options "-O2 -fdump-tree-vrp1 -fdelete-null-pointer-checks" } */
+/* { dg-skip-if "" keeps_null_pointer_checks } */
 struct A {int a;};
 struct B {int b;};
 struct C:A,B {int c;

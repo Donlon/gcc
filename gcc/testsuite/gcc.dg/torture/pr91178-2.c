@@ -1,4 +1,5 @@
 /* { dg-do compile } */
+/* { dg-require-effective-target size24plus } */
 
 int a[100][70304];
 int b[100];

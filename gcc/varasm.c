@@ -6013,6 +6013,36 @@ assemble_alias (tree decl, tree target)
     }
 }
 
+void
+assemble_sym_meta_info (FILE *stream, const char *name, tree decl)
+{
+  tree loc_attr;
+  tree retain_attr;
+
+  if (decl == NULL_TREE)
+    return;
+
+  retain_attr = lookup_attribute ("retain", DECL_ATTRIBUTES (decl));
+  loc_attr = lookup_attribute ("location", DECL_ATTRIBUTES (decl));
+
+  if (retain_attr != NULL_TREE)
+    fprintf (stream, "\t.sym_meta_info\t%s, SMK_RETAIN, 1\n", name);
+
+  if (loc_attr != NULL_TREE)
+    {
+      tree value = TREE_VALUE (loc_attr);
+      value = TREE_VALUE (value);
+      /* The attribute spec should be enforcing that the location attribute
+         must have exactly one argument.  */
+      gcc_assert (value != NULL_TREE);
+
+      /* FIXME: For msp430 a host int (at least 32-bits) will always be enough
+         to hold an address.  But not for other targets.  */
+      fprintf (stream, "\t.sym_meta_info\t%s, SMK_LOCATION, 0x%x\n", name,
+	       (unsigned int) TREE_INT_CST_LOW (value));
+    }
+}
+
 /* Record and output a table of translations from original function
    to its transaction aware clone.  Note that tm_pure functions are
    considered to be their own clone.  */

@@ -671,7 +671,7 @@ convert_modes (machine_mode mode, machine_mode oldmode, rtx x, int unsignedp)
     return x;
 
   if (CONST_SCALAR_INT_P (x)
-      && is_int_mode (mode, &int_mode))
+      && is_a <scalar_int_mode> (mode, &int_mode))
     {
       /* If the caller did not tell us the old mode, then there is not
 	 much to do with respect to canonicalization.  We have to
@@ -8871,9 +8871,6 @@ expand_expr_real_2 (sepops ops, rtx target, machine_mode tmode,
 		     != INTEGER_CST check.  Handle it.  */
 		  if (GET_MODE (op0) == VOIDmode && GET_MODE (op1) == VOIDmode)
 		    goto widen_mult_const;
-		  if (TREE_CODE (treeop1) == INTEGER_CST)
-		    op1 = convert_modes (mode, word_mode, op1,
-					 TYPE_UNSIGNED (TREE_TYPE (treeop1)));
 		  temp = expand_binop (mode, other_optab, op0, op1, target,
 				       unsignedp, OPTAB_LIB_WIDEN);
 		  hipart = gen_highpart (word_mode, temp);

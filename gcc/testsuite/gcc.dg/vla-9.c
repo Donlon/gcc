@@ -1,5 +1,5 @@
 /* { dg-do compile  } */
-/* { dg-options "-std=c99 -pedantic-errors -W -Wall" } */
+/* { dg-options "-std=c99 -W -Wall" } */
 /* PR c/28280 */
 
 void f(__SIZE_TYPE__ d)

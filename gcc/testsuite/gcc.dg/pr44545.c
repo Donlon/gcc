@@ -1,6 +1,8 @@
 /* { dg-do compile } */
 /* { dg-options "-O2 -fnon-call-exceptions -ftrapv -fexceptions" } */
 /* { dg-require-effective-target exceptions } */
+/* { dg-require-effective-target trapping } */
+
 void
 DrawChunk(int *tabSize, int x) 
 {

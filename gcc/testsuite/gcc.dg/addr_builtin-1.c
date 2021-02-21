@@ -1,5 +1,5 @@
-/* PR66516 - missing diagnostic on taking the address of a builtin function
-   { dg-do compile }  */
+/* PR66516 - missing diagnostic on taking the address of a builtin function.  */
+/* { dg-do compile } */
 
 typedef void (F)(void);
 typedef __UINTPTR_TYPE__ uintptr_t;

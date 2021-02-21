@@ -1,9 +1,7 @@
 /* { dg-do compile } */
 /* { dg-options "-O3" } */
 
-#if __SIZEOF_POINTER__ != __SIZEOF_LONG__
 #define long __INTPTR_TYPE__
-#endif
 
 void *fn1(void *p1, void *p2, long p3)
 {

@@ -10435,6 +10435,39 @@ for the compiler to know that @code{fyl2xp1} pops both inputs.
 asm ("fyl2xp1" : "=t" (result) : "0" (x), "u" (y) : "st(1)");
 @end smallexample
 
+@anchor{msp430Operandmodifiers}
+@subsubsection MSP430 Operand Modifiers
+
+The list below describes the supported modifiers and their effects for MSP430.
+
+@multitable {Modifier} {Print the opcode suffix for the size of th}
+@headitem Modifier @tab Description
+@item @code{A} @tab low 16-bits of int/lower of register pair
+@item @code{B} @tab high 16-bits of int/higher of register pair
+@item @code{C} @tab bits 32-47 of a 64-bit value/reg 3 of a DImode value
+@item @code{D} @tab bits 48-63 of a 64-bit value/reg 4 of a DImode value
+@item @code{H} @tab like %B (for backwards compatibility)
+@item @code{I} @tab inverse of value
+@item @code{J} @tab an integer without a # prefix
+@item @code{L} @tab like %A (for backwards compatibility)
+@item @code{O} @tab offset of the top of the stack
+@item @code{Q} @tab like X but generates an A postfix
+@item @code{R} @tab inverse of condition code, unsigned.
+@item @code{W} @tab value - 16
+@item @code{X} @tab X instruction postfix in large mode
+@item @code{Y} @tab value - 4
+@item @code{Z} @tab value - 1
+@item @code{b} @tab .B or .W or .A, depending upon the mode
+@item @code{d} @tab offset 1 byte of a memory reference or constant value
+@item @code{e} @tab offset 3 bytes of a memory reference or constant value
+@item @code{f} @tab offset 5 bytes of a memory reference or constant value
+@item @code{g} @tab offset 7 bytes of a memory reference or constant value
+@item @code{p} @tab bit position
+@item @code{r} @tab inverse of condition code
+@item @code{x} @tab like X but only for pointers
+@end multitable
+
+
 @lowersections
 @include md.texi
 @raisesections

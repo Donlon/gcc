@@ -559,7 +559,7 @@ Objective-C and Objective-C++ Dialects}.
 -fnon-call-exceptions  -fdelete-dead-exceptions  -funwind-tables @gol
 -fasynchronous-unwind-tables @gol
 -fno-gnu-unique @gol
--finhibit-size-directive  -fno-common  -fno-ident @gol
+-finhibit-size-directive  -fcommon  -fno-ident @gol
 -fpcc-struct-return  -fpic  -fPIC  -fpie  -fPIE  -fno-plt @gol
 -fno-jump-tables @gol
 -frecord-gcc-switches @gol
@@ -993,7 +993,7 @@ Objective-C and Objective-C++ Dialects}.
 -mwarn-mcu @gol
 -mcode-region=  -mdata-region= @gol
 -msilicon-errata=  -msilicon-errata-warn= @gol
--mhwmult=  -minrt}
+-mhwmult=  -minrt  -mmax-inline-shift=}
 
 @emph{NDS32 Options}
 @gccoptlist{-mbig-endian  -mlittle-endian @gol
@@ -4330,8 +4330,10 @@ without this option, certain GNU extensions and traditional C and C++
 features are supported as well.  With this option, they are rejected.
 
 @option{-Wpedantic} does not cause warning messages for use of the
-alternate keywords whose names begin and end with @samp{__}.  Pedantic
-warnings are also disabled in the expression that follows
+alternate keywords whose names begin and end with @samp{__}.  This alternate
+format can also be used to disable warnings for non-ISO @samp{__intN} types,
+i.e. @samp{__intN__}.
+Pedantic warnings are also disabled in the expression that follows
 @code{__extension__}.  However, only system header files should use
 these escape routes; application programs should avoid them.
 @xref{Alternate Keywords}.
@@ -13856,35 +13858,27 @@ useful for building programs to run under WINE@.
 code that is not binary compatible with code generated without that switch.
 Use it to conform to a non-default application binary interface.
 
-@item -fno-common
-@opindex fno-common
+@item -fcommon
 @opindex fcommon
+@opindex fno-common
 @cindex tentative definitions
-In C code, this option controls the placement of global variables 
-defined without an initializer, known as @dfn{tentative definitions} 
-in the C standard.  Tentative definitions are distinct from declarations 
+In C code, this option controls the placement of global variables
+defined without an initializer, known as @dfn{tentative definitions}
+in the C standard.  Tentative definitions are distinct from declarations
 of a variable with the @code{extern} keyword, which do not allocate storage.
 
-Unix C compilers have traditionally allocated storage for
-uninitialized global variables in a common block.  This allows the
-linker to resolve all tentative definitions of the same variable
-in different compilation units to the same object, or to a non-tentative
-definition.  
-This is the behavior specified by @option{-fcommon}, and is the default for 
-GCC on most targets.  
-On the other hand, this behavior is not required by ISO
-C, and on some targets may carry a speed or code size penalty on
-variable references.
+The default is @option{-fno-common}, which specifies that the compiler places
+uninitialized global variables in the BSS section of the object file.
+This inhibits the merging of tentative definitions by the linker so you get a
+multiple-definition error if the same variable is accidentally defined in more
+than one compilation unit.
 
-The @option{-fno-common} option specifies that the compiler should instead
-place uninitialized global variables in the BSS section of the object file.
-This inhibits the merging of tentative definitions by the linker so
-you get a multiple-definition error if the same 
-variable is defined in more than one compilation unit.
-Compiling with @option{-fno-common} is useful on targets for which
-it provides better performance, or if you wish to verify that the
-program will work on other systems that always treat uninitialized
-variable definitions this way.
+The @option{-fcommon} places uninitialized global variables in a common block.
+This allows the linker to resolve all tentative definitions of the same variable
+in different compilation units to the same object, or to a non-tentative
+definition.  This behavior is inconsistent with C++, and on many targets implies
+a speed and code size penalty on global variable references.  It is mainly
+useful to enable legacy code to link without errors.
 
 @item -fno-ident
 @opindex fno-ident
@@ -22911,7 +22905,36 @@ command line.  The script's name is the name of the MCU with
 command line defines the C preprocessor symbol @code{__XXX__} and
 cause the linker to search for a script called @file{xxx.ld}.
 
-This option is also passed on to the assembler.
+The ISA and hardware multiply supported for the different MCUs is hard-coded
+into GCC. However, an external @samp{devices.csv} file can be used to
+extend device support beyond those that have been hard-coded.
+
+GCC searches for the @samp{devices.csv} file using the following methods in the
+given precedence order, where the first method takes precendence over the
+second which takes precedence over the third.
+
+@table @asis
+@item Include path specified with @code{-I}
+@samp{devices.csv} will be searched for in each of the directories specified by
+include paths.
+@item Path specified by the environment variable @samp{MSP430_GCC_INCLUDE_DIR}
+Define the value of the global environment variable
+@samp{MSP430_GCC_INCLUDE_DIR}
+to the full path to the directory containing devices.csv, and GCC will search
+this directory for devices.csv. If devices.csv is found, this directory will
+also be registered as an include path, and linker library path. Header files
+and linker scripts in this directory can therefore be used without manually
+specifying @code{-I} and @code{-L} on the command line.
+@item The @samp{msp430-elf/include/devices} directory
+Finally, GCC will examine @samp{msp430-elf/include/devices} from the
+toolchain root directory. This directory does not exist in a default
+installation, but if the user has created it and copied @samp{devices.csv}
+there, then the MCU data will be read. As above, this directory will
+also be registered as an include path, and linker library path.
+
+@end table
+If none of the above search methods find @samp{devices.csv}, then the
+hard-coded MCU data is used.
 
 @item -mwarn-mcu
 @itemx -mno-warn-mcu
@@ -22936,11 +22959,11 @@ any scripts that would be selected by the @option{-mmcu=} option.
 
 @item -mlarge
 @opindex mlarge
-Use large-model addressing (20-bit pointers, 32-bit @code{size_t}).
+Use large-model addressing (20-bit pointers, @code{size_t} and @code{ptrdiff_t}).
 
 @item -msmall
 @opindex msmall
-Use small-model addressing (16-bit pointers, 16-bit @code{size_t}).
+Use small-model addressing (16-bit pointers, @code{size_t} and @code{ptrdiff_t}).
 
 @item -mrelax
 @opindex mrelax
@@ -22977,6 +23000,19 @@ initializers or constructors.  This is intended for memory-constrained
 devices.  The compiler includes special symbols in some objects
 that tell the linker and runtime which code fragments are required.
 
+@item -mmax-inline-shift=
+@opindex mmax-inline-shift=
+This option takes an integer between 0 and 64 inclusive, and describes
+the maximum number of inline shift instructions which should be emitted to
+perform a shift operation by a costant amount. When this value needs to be
+exceeded, an mspabi helper function is used instead. The default value is 4.
+
+This only affects cases where a shift by multiple positions cannot be
+completed with a single instruction (e.g. all shifts >1 on the 430 ISA).
+
+Shifts of a 32-bit value are at least twice as costly, so the value passed for
+this option is divided by 2 and the resulting value used instead.
+
 @item -mcode-region=
 @itemx -mdata-region=
 @opindex mcode-region
@@ -22999,6 +23035,9 @@ the named silicon errata.
 @opindex msilicon-errata-warn
 This option passes on a request to the assembler to enable warning
 messages when a silicon errata might need to be applied.
+
+@item -mdisable-device-warnings
+Suppress warnings regarding the @samp{devices.csv} file not being found.
 
 @end table
 

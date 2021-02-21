@@ -2,6 +2,13 @@ msim
 Target
 Use simulator runtime.
 
+mno-gc
+Target Undocumented
+
+mtiny-printf
+Target Report Mask(TINY_PRINTF)
+Use a lightweight configuration of printf and puts to reduce code size. For single-threaded applications, not requiring reentrant I/O only.
+
 masm-hex
 Target Mask(ASM_HEX)
 Force assembly output to always use hex constants.
@@ -15,8 +22,29 @@ Target Report Var(msp430_warn_mcu) Init(1)
 Warn if an MCU name is unrecognized or conflicts with other options (default: on).
 
 mcpu=
-Target Report Joined RejectNegative Var(target_cpu)
+Target Report Joined RejectNegative Var(target_cpu) ToLower Enum(msp430_cpu_types) Init(MSP430_CPU_MSP430X_DEFAULT)
 Specify the ISA to build for: msp430, msp430x, msp430xv2.
+
+Enum
+Name(msp430_cpu_types) Type(enum msp430_cpu_types)
+
+EnumValue
+Enum(msp430_cpu_types) String(msp430) Value(MSP430_CPU_MSP430) Canonical
+
+EnumValue
+Enum(msp430_cpu_types) String(430) Value(MSP430_CPU_MSP430)
+
+EnumValue
+Enum(msp430_cpu_types) String(msp430x) Value(MSP430_CPU_MSP430X) Canonical
+
+EnumValue
+Enum(msp430_cpu_types) String(430x) Value(MSP430_CPU_MSP430X)
+
+EnumValue
+Enum(msp430_cpu_types) String(msp430xv2) Value(MSP430_CPU_MSP430XV2) Canonical
+
+EnumValue
+Enum(msp430_cpu_types) String(430xv2) Value(MSP430_CPU_MSP430XV2)
 
 mlarge
 Target Report Mask(LARGE) RejectNegative
@@ -34,7 +62,7 @@ mOs
 Target Undocumented Mask(OPT_SPACE)
 
 minrt
-Target Report Mask(MINRT) RejectNegative
+Target Report RejectNegative
 Use a minimum runtime (no static initializers or ctors) for memory-constrained devices.
 
 HeaderInclude
@@ -67,8 +95,12 @@ Target Joined RejectNegative Report ToLower Var(msp430_code_region) Enum(msp430_
 Specify whether functions should be placed into low or high memory.
 
 mdata-region=
-Target Joined RejectNegative Report ToLower Var(msp430_data_region) Enum(msp430_regions) Init(MSP430_REGION_ANY)
+Target Joined RejectNegative Report ToLower Var(msp430_data_region) Enum(msp430_regions) Init(MSP430_REGION_LOWER)
 Specify whether variables should be placed into low or high memory.
+
+muse-lower-region-prefix
+Target Mask(USE_LOWER_REGION_PREFIX) Report
+Add the .lower prefix to sections when compiling with -mcode/data-region=lower.
 
 Enum
 Name(msp430_regions) Type(enum msp430_regions)
@@ -92,3 +124,18 @@ Passes on a request to the assembler to enable fixes for various silicon errata.
 msilicon-errata-warn=
 Target Joined RejectNegative Report ToLower
 Passes on a request to the assembler to warn about various silicon errata.
+
+mdevices-csv-loc=
+Target Joined Var(devices_csv_loc) RejectNegative Report
+The path to devices.csv.  The GCC driver can normally locate devices.csv itself
+and pass this option to the compiler, so the user shouldn't need to pass this.
+
+mdisable-device-warnings
+Target RejectNegative Mask(DISABLE_DEVICE_WARN) Report
+Suppress warnings regarding devices.csv not being found on an include path.
+
+mmax-inline-shift=
+Target RejectNegative Joined UInteger IntegerRange(0,65) Var(msp430_max_inline_shift) Init(65) Report
+For shift operations by a constant amount, which require an individual instruction to shift by one
+position, set the maximum number of inline shift instructions (maximum value 64) to emit instead of using the corresponding __mspabi helper function.
+The default value is 4.

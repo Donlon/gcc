@@ -1,6 +1,6 @@
 // PR c++/82081
 // { dg-do compile { target c++11 } }
-// { dg-additional-options "-O2 -fdump-tree-optimized" }
+// { dg-additional-options "-O2 -fdump-tree-optimized -fexceptions" }
 // { dg-final { scan-tree-dump-not "tail call" "optimized" } }
 
 int g(int) ;

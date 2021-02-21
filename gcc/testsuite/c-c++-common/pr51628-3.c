@@ -6,7 +6,7 @@ struct pair_t
 {
   int x;
   int i;
-} __attribute__((packed, aligned (2)));
+} __attribute__((packed, aligned (1)));
 
 extern struct pair_t p;
 extern int *x;

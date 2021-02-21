@@ -33,6 +33,7 @@
 
 load_lib torture-options.exp
 load_lib c-torture.exp
+load_lib gcc-dg.exp
 
 torture-init
 set-torture-options $C_TORTURE_OPTIONS {{}} $LTO_TORTURE_OPTIONS

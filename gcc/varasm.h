@@ -51,6 +51,9 @@ extern void merge_weak (tree, tree);
 /* Make one symbol an alias for another.  */
 extern void assemble_alias (tree, tree);
 
+/* Emit .sym_meta_info directive(s) based on the attributes applied to decl.  */
+void assemble_sym_meta_info (FILE *stream, const char *name, tree decl);
+
 /* Return nonzero if VALUE is a valid constant-valued expression
    for use in initializing a static variable; one that can be an
    element of a "constant" initializer.

@@ -8,7 +8,11 @@
 #ifdef __moxie__
 #define REGISTER "8"
 #else
+#ifdef __MSP430__
+#define REGISTER "4"
+#else
 #define REGISTER "0"
+#endif
 #endif
 #endif
 

@@ -1,6 +1,7 @@
 /* PR middle-end/79788 */
 /* { dg-do compile } */
 /* { dg-options "-ftrapv" } */
+/* { dg-require-effective-target trapping } */
 
 void bar (void);
 void

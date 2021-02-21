@@ -260,6 +260,16 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 #endif
 #endif
 
+#ifndef ASM_OUTPUT_SYM_META_INFO
+#define ASM_OUTPUT_SYM_META_INFO(STREAM, NAME, DECL)	\
+  do							\
+    {							\
+      assemble_sym_meta_info (STREAM, NAME, DECL);	\
+    }							\
+  while (0)
+
+#endif
+
 /* This determines whether or not we support weak symbols.  SUPPORTS_WEAK
    must be a preprocessor constant.  */
 #ifndef SUPPORTS_WEAK

@@ -1,7 +1,7 @@
 /* Verify that GCC's internal notions of types in <stdint.h> agree
    with any system <inttypes.h> header.  */
 /* { dg-do compile { target inttypes_types } } */
-/* { dg-options "-std=iso9899:1999 -pedantic-errors" } */
+/* { dg-options "-std=iso9899:1999" } */
 /* { dg-additional-options "-DSIGNAL_SUPPRESS" { target { ! signal } } } */
 
 #include <inttypes.h>

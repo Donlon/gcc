@@ -36,15 +36,23 @@ rtx	msp430_incoming_return_addr_rtx (void);
 void	msp430_init_cumulative_args (CUMULATIVE_ARGS *, tree, rtx, tree, int);
 int	msp430_initial_elimination_offset (int, int);
 bool    msp430_is_interrupt_func (void);
-const char * msp430x_logical_shift_right (rtx);
 const char * msp430_mcu_name (void);
 void    msp430_output_aligned_decl_common (FILE *, const tree, const char *, unsigned HOST_WIDE_INT, unsigned);
 void	msp430_output_labelref (FILE *, const char *);
 void	msp430_register_pragmas (void);
 rtx	msp430_return_addr_rtx (int);
 void	msp430_split_movsi (rtx *);
+int msp430_split_addsi (rtx *);
 void    msp430_start_function (FILE *, const char *, tree);
 rtx	msp430_subreg (machine_mode, rtx, machine_mode, int);
 bool    msp430_use_f5_series_hwmult (void);
+bool	msp430_has_hwmult (void);
+bool msp430_op_not_in_high_mem (rtx op);
+bool msp430_430x_insn_not_required (rtx op1, rtx op2);
+
+#ifdef RTX_CODE
+int msp430_expand_shift (enum rtx_code code, machine_mode mode, rtx *operands);
+const char * msp430_output_asm_shift_insns (enum rtx_code code, machine_mode mode, rtx *operands);
+#endif
 
 #endif /* GCC_MSP430_PROTOS_H */

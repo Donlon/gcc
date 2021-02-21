@@ -74,6 +74,27 @@ as_internal_fn (combined_fn code)
   return internal_fn (int (code) - int (END_BUILTINS));
 }
 
+/* Historically there have been attempts to call SET_DECL/TYPE_ALIGN with
+   POINTER_SIZE as the alignment. Alignment is expected to always be a power
+   of 2, so aligning to POINTER_SIZE on targets that use a partial integer
+   mode for pointers will cause problems.
+   So for targets that support a partial integer mode, check the requested
+   alignment is 0 or a power of 2 before aligning.  */
+#if defined(HAVE_PQImode) || defined(HAVE_PHImode) \
+  || defined(HAVE_PSImode) || defined(HAVE_PDImode)
+inline HOST_WIDE_INT
+check_pow2_or_zerop (HOST_WIDE_INT x)
+{
+  gcc_assert (pow2_or_zerop (x));
+  return x;
+}
+
+#define CHECK_POW2_OR_ZEROP(X) check_pow2_or_zerop (X)
+
+#else /* !defined(HAVE_P{Q,H,S,D}Imode) */
+#define CHECK_POW2_OR_ZEROP(X) X
+#endif
+
 /* Macros for initializing `tree_contains_struct'.  */
 #define MARK_TS_BASE(C)					\
   (tree_contains_struct[C][TS_BASE] = true)
@@ -1998,7 +2019,7 @@ extern machine_mode vector_type_mode (const_tree);
 
 /* Specify that TYPE_ALIGN(NODE) is X.  */
 #define SET_TYPE_ALIGN(NODE, X) \
-    (TYPE_CHECK (NODE)->type_common.align = ffs_hwi (X))
+    (TYPE_CHECK (NODE)->type_common.align = ffs_hwi (CHECK_POW2_OR_ZEROP (X)))
 
 /* 1 if the alignment for this type was requested by "aligned" attribute,
    0 if it is the default for this type.  */
@@ -2449,7 +2470,7 @@ extern machine_mode vector_type_mode (const_tree);
      ? ((unsigned)1) << ((NODE)->decl_common.align - 1) : 0)
 /* Specify that DECL_ALIGN(NODE) is X.  */
 #define SET_DECL_ALIGN(NODE, X) \
-    (DECL_COMMON_CHECK (NODE)->decl_common.align = ffs_hwi (X))
+    (DECL_COMMON_CHECK (NODE)->decl_common.align = ffs_hwi (CHECK_POW2_OR_ZEROP (X)))
 
 /* The minimum alignment necessary for the datum, in bits, without
    warning.  */

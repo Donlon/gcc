@@ -4095,10 +4095,16 @@ driver_handle_option (struct gcc_options *opts,
 	  if (arg[j] == ',')
 	    {
 	      add_infile (save_string (arg + prev, j - prev), "*");
+	      /* Save -Wl,-L options without the leading -Wl so the driver can
+		 do further processing.  */
+	      if (strncmp ("-L", arg + prev, 2) == 0)
+		save_switch (save_string (arg + prev, j - prev), 0, NULL, validated, true);
 	      prev = j + 1;
 	    }
 	/* Record the part after the last comma.  */
 	add_infile (arg + prev, "*");
+	if (strncmp ("-L", arg + prev, 2) == 0)
+	  save_switch (save_string (arg + prev, strlen(arg) - prev), 0, NULL, validated, true);
       }
       do_save = false;
       break;

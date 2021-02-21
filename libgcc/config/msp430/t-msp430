@@ -40,7 +40,14 @@ LIB2ADD = \
 	$(srcdir)/config/msp430/floathisf.c \
 	$(srcdir)/config/msp430/cmpd.c
 
-HOST_LIBGCC2_CFLAGS += -Os -ffunction-sections -fdata-sections -mhwmult=none
+HOST_LIBGCC2_CFLAGS += -Os -ffunction-sections -fdata-sections -mhwmult=none -DNO_DI_MODE
+CRTSTUFF_T_CFLAGS += -DNO_DSO_HANDLE
+
+crtbegin_no_eh.o: $(srcdir)/crtstuff.c
+	$(crt_compile) $(CRTSTUFF_T_CFLAGS) -U__LIBGCC_EH_FRAME_SECTION_NAME__ -c $< -DCRT_BEGIN
+
+crtend_no_eh.o: $(srcdir)/crtstuff.c
+	$(crt_compile) $(CRTSTUFF_T_CFLAGS) -U__LIBGCC_EH_FRAME_SECTION_NAME__ -c $< -DCRT_END
 
 mpy.o: $(srcdir)/config/msp430/mpy.c
 	$(gcc_compile) $< -c

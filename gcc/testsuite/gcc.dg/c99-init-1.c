@@ -1,7 +1,7 @@
 /* Test for C99 designated initializers */
 /* Origin: Jakub Jelinek <jakub@redhat.com> */
 /* { dg-do run } */
-/* { dg-options "-std=iso9899:1999 -pedantic-errors" } */
+/* { dg-options "-std=iso9899:1999" } */
 
 typedef __SIZE_TYPE__ size_t;
 typedef __WCHAR_TYPE__ wchar_t;

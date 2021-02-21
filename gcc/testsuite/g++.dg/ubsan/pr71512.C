@@ -1,6 +1,7 @@
 /* PR c/71512 */
 /* { dg-do compile } */
 /* { dg-options "-O2 -ftrapv -fnon-call-exceptions -fsanitize=undefined" } */
+/* { dg-require-effective-target trapping } */
 
 bool
 foo (int *x, int *y, int *z)

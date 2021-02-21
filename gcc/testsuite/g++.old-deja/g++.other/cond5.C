@@ -1,5 +1,6 @@
 // { dg-do assemble  }
 // { dg-options "-W -pedantic -ansi" }
+// { dg-require-effective-target exceptions_enabled }
 
 // Copyright (C) 1999, 2000 Free Software Foundation, Inc.
 // Contributed by Nathan Sidwell 1 Sep 1999 <nathan@acm.org>

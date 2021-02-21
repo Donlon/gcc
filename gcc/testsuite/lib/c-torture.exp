@@ -166,9 +166,17 @@ proc c-torture-execute { sources args } {
 
     set count 0
     set oldstatus "foo"
+    set status "foo"
     foreach option $option_list {
 	if { $count > 0 } {
+	    # oldexec is the execname from two iterations ago.
+	    # execname from the previous iteration must be kept until the end
+	    # of this iteration.
+	    if { [info exists oldexec] && $oldstatus == "pass" } {
+		file_on_host delete $oldexec
+	    }
 	    set oldexec $execname
+	    set oldstatus $status
 	}
 	set execname "${executable}${count}"
 	incr count
@@ -206,6 +214,7 @@ proc c-torture-execute { sources args } {
 	if [target_info exists no_long_long] then {
 	    if [expr [search_for $src "long long"]] then {
 		unsupported "$testcase execution, $option"
+		file_on_host delete $execname
 		continue
 	    }
 	}
@@ -243,16 +252,13 @@ proc c-torture-execute { sources args } {
 	    set status [lindex $result 0]
 	    set output [lindex $result 1]
 	}
-        if { $oldstatus == "pass" } {
-	    file_on_host delete $oldexec
-        }
 	$status "$testcase execution, $option"
-	set oldstatus $status
     }
-    if [info exists status] {
-	if { $status == "pass" } {
-	    file_on_host delete $execname
-	}
+    if { [info exists oldexec] && $oldstatus == "pass" } {
+	file_on_host delete $oldexec
+    }
+    if { [info exists execname] && $status == "pass" } {
+	file_on_host delete $execname
     }
 }
 

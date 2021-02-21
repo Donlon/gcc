@@ -1,6 +1,7 @@
 // PR c++/83555
 // { dg-do compile }
 // { dg-options "-O2 -fdump-tree-optimized -fdelete-null-pointer-checks" }
+// { dg-skip-if "" keeps_null_pointer_checks }
 
 struct A { int a; };
 struct B { int b; };

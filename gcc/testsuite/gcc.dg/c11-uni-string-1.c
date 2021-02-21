@@ -1,6 +1,6 @@
 /* Test Unicode strings in C11.  Test valid code.  */
 /* { dg-do run } */
-/* { dg-options "-std=c11 -pedantic-errors" } */
+/* { dg-options "-std=c11" } */
 
 /* More thorough tests are in c-c++-common/raw-string-*.c; this test
    verifies the particular subset (Unicode but not raw strings) that

@@ -386,7 +386,7 @@ void test_memcpy_range_exceed (char *d, const char *s)
 
   T (d, s + i, 5);   /* { dg-warning "accessing 5 bytes at offsets 0 and \\\[9223372036854775805, 9223372036854775807] overlaps 3 bytes at offset 9223372036854775802" "LP64" { target lp64 } } */
   T (d + i, s, 5);   /* { dg-warning "accessing 5 bytes at offsets \\\[9223372036854775805, 9223372036854775807] and 0 overlaps 3 bytes at offset 9223372036854775802" "LP64" { target lp64 } } */
-#elif __SIZEOF_SIZE_T__ == 4
+#elif __SIZEOF_SIZE_T__ == 4 && !__MSP430X_LARGE__
   T (d, d + i, 5);   /* { dg-warning "accessing 5 bytes at offsets 0 and \\\[2147483645, 2147483647] overlaps 3 bytes at offset 2147483642" "ILP32" { target ilp32 } } */
   T (d + i, d, 5);   /* { dg-warning "accessing 5 bytes at offsets \\\[2147483645, 2147483647] and 0 overlaps 3 bytes at offset 2147483642" "ILP32" { target ilp32 } } */
 

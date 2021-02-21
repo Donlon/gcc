@@ -1,10 +1,15 @@
-
 typedef __SIZE_TYPE__ Size_t;
 
+/* size_t is __int20, so 20 bits, for __MSP430X_LARGE__, but __SIZEOF_POINTER__
+   returns the bytesize which is 4.  */
+#ifdef __MSP430X_LARGE__
+#define bufsize ((1L << (20 - 2))-256)
+#else  /* !__MSP430X_LARGE__ */
 #if __SIZEOF_LONG__ < __SIZEOF_POINTER__
 #define bufsize ((1LL << (8 * sizeof(Size_t) - 2))-256)
 #else
 #define bufsize ((1L << (8 * sizeof(Size_t) - 2))-256)
+#endif
 #endif
 
 struct huge_struct

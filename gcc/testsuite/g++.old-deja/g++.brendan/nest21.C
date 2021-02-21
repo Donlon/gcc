@@ -1,4 +1,5 @@
 // { dg-do run  }
+// { dg-options  -Wl,-u,_printf_float { target newlib_nano_io } }
 // GROUPS passed nested-classes
 #include <iostream>
 #include <cstdio>

@@ -270,6 +270,14 @@ proc check_configured_with { pattern } {
     return 0
 }
 
+# Return 1 if GCC was not configured with $pattern.
+proc check_not_configured_with { pattern } {
+    if { [check_configured_with $pattern] } {
+	return 0
+    }
+    return 1
+}
+
 ###############################
 # proc check_weak_available { }
 ###############################
@@ -2483,6 +2491,9 @@ proc check_cxa_atexit_available { } {
 	} elseif { [istarget *-*-vxworks] } {
 	    # vxworks doesn't have __cxa_atexit but subsequent test passes.
 	    expr 0
+	} elseif { [istarget msp430-*-*] } {
+	    # msp430 doesn't have __cxa_atexit but subsequent test passes.
+	    expr 0
 	} else {
 	    check_runtime_nocache cxa_atexit_available {
 		// C++
@@ -2633,6 +2644,18 @@ proc check_effective_target_size20plus { } {
     }]
 }
 
+# Return 1 if we support 20-bit or larger array and structure sizes
+# using default options, 0 otherwise.
+# This implies at least a 24-bit address space, as no targets have an address
+# space between 20 and 24 bits.
+
+proc check_effective_target_size24plus { } {
+    return [check_no_compiler_messages size24plus object {
+	char dummy[524289L];
+    }]
+}
+
+
 # Return 1 if we support 24-bit or larger array and structure sizes
 # using default options, 0 otherwise.
 # This implies at least a 32-bit address space, as no targets have an address
@@ -2693,6 +2716,35 @@ proc check_effective_target_int_eq_float { } {
 	int dummy[sizeof (int) >= sizeof (float) ? 1 : -1];
     }]
 }
+
+# Return 1 if short size is equal to int size,
+# 0 otherwise.
+
+proc check_effective_target_short_eq_int { } {
+    return [check_no_compiler_messages short_eq_int object {
+	int dummy[sizeof (short) == sizeof (int) ? 1 : -1];
+    }]
+}
+
+# Return 1 if pointer size is equal to short size,
+# 0 otherwise.
+
+proc check_effective_target_ptr_eq_short { } {
+    return [check_no_compiler_messages ptr_eq_short object {
+	int dummy[sizeof (void *) == sizeof (short) ? 1 : -1];
+    }]
+}
+
+
+# Return 1 if pointer size is equal to int size,
+# 0 otherwise.
+
+proc check_effective_target_ptr_eq_int { } {
+    return [check_no_compiler_messages ptr_eq_int object {
+	int dummy[sizeof (void *) == sizeof (int) ? 1 : -1];
+    }]
+}
+
 
 # Return 1 if pointer size is equal to long size,
 # 0 otherwise.
@@ -8684,6 +8736,24 @@ proc check_effective_target_exceptions {} {
     return 1
 }
 
+# Used to check if the testing configuration supports exceptions.
+# Returns 0 if exceptions are unsupported or disabled (e.g. by passing
+# -fno-exceptions). Returns 1 if exceptions are enabled.
+proc check_effective_target_exceptions_enabled {} {
+    return [check_cached_effective_target exceptions_enabled {
+	if { [check_effective_target_exceptions] } {
+	    return [check_no_compiler_messages exceptions_enabled assembly {
+		void foo (void)
+		{
+		    throw 1;
+		}
+	    }]
+	} else {
+	    # If exceptions aren't supported, then they're not enabled.
+	    return 0
+	}
+    }]
+}
 
 proc check_effective_target_tiny {} {
     return [check_cached_effective_target tiny {
@@ -8697,6 +8767,24 @@ proc check_effective_target_tiny {} {
       }
       return 0
     }]
+}
+
+proc check_effective_target_logical_op_short_circuit {} {
+    if { [istarget mips*-*-*]
+	 || [istarget arc*-*-*]
+	 || [istarget avr*-*-*]
+	 || [istarget crisv32-*-*] || [istarget cris-*-*]
+	 || [istarget mmix-*-*]
+	 || [istarget msp430-*-*]
+	 || [istarget s390*-*-*]
+	 || [istarget powerpc*-*-*]
+	 || [istarget nios2*-*-*]
+	 || [istarget riscv*-*-*]
+	 || [istarget visium-*-*]
+	 || [check_effective_target_arm_cortex_m] } {
+	return 1
+    }
+    return 0
 }
 
 # Return 1 if the target supports -mbranch-cost=N option.
@@ -9379,4 +9467,20 @@ proc check_effective_target_mfentry { } {
     return [check_no_compiler_messages mfentry object {
 	        void foo (void) { }
     } "-mfentry"]
+}
+
+proc check_effective_target_newlib_nano_io { } {
+    return [check_configured_with "--enable-newlib-nano-formatted-io"]
+}
+
+proc check_effective_target_not_newlib_nano_io { } {
+    return [check_not_configured_with "--enable-newlib-nano-formatted-io"]
+}
+
+proc check_effective_target_msp430_large_memory_model {} {
+    return [check_no_compiler_messages msp430_large assembly {
+	#ifndef __MSP430X_LARGE__
+	#error
+	#endif
+    } ""]
 }

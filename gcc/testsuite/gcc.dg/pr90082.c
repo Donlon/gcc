@@ -1,5 +1,6 @@
 /* PR rtl-optimization/90082 */
 /* { dg-do compile } */
+/* { dg-require-effective-target trapping } */
 /* { dg-options "-O1 -fnon-call-exceptions -ftrapv" } */
 
 void *buf[5];

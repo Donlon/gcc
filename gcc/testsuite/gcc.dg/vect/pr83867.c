@@ -1,4 +1,5 @@
 /* { dg-do compile } */
+/* { dg-require-effective-target trapping } */
 /* { dg-additional-options "-O -ftrapv" } */
 
 int

@@ -5,7 +5,7 @@
 
 int deref (const int *p, int i)
 {
-  return p[i];                // { dg-warning "array subscript \\\[3, \[0-9\]+] is outside array bounds of .int\\\[2\\\]." "ilp33" { xfail ilp32 } }
+  return p[i];                // { dg-warning "array subscript \\\[3, \[0-9\]+] is outside array bounds of .int\\\[2\\\]." "ilp33" { xfail { ilp32 || int16 } } }
 
   // There should also be an inlining context here.  PR 86650 tracks
   // its absence.

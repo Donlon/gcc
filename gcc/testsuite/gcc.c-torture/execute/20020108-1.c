@@ -1,4 +1,5 @@
 /* This file tests shifts in various integral modes.  */
+/* { dg-options -fno-inline } */
 
 #include <limits.h>
 

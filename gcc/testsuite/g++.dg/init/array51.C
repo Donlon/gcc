@@ -71,10 +71,16 @@ int main ()
   assert_rep (apam0_, 2);
   assert_rep (apam00, 2);
 
+  /* When the f_ functions try to write nullptr to memory with -mlarge,
+     they do MOVX.A #-1, DST.  This is ok but means a memcmp over the in-memory
+     size of a pointer (4-bytes) is not going to work since there are
+     undefined bits on the MSB side of that 4-byte range.  */
+#ifndef __MSP430X_LARGE__
   assert_rep (f__ ().a, 2);
   assert_rep (f0_ ().a, 2);
   assert_rep (f0_ ().a, 2);
   assert_rep (f00 ().a, 2);
+#endif
 
   assert_rep (b__.a, 2);
   assert_rep (b0_.a, 2);

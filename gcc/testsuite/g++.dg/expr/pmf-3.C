@@ -1,6 +1,7 @@
 // PR c++/80485
 // { dg-do compile { target c++11 } }
 // { dg-options "-fdelete-null-pointer-checks" }
+// { dg-skip-if "" keeps_null_pointer_checks }
 
 struct dummy {
   void nonnull() {};

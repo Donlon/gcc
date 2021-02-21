@@ -1,6 +1,7 @@
 /* Test __builtin_{add,sub}_overflow_p on {,un}signed long int.  */
 /* { dg-do run } */
 /* { dg-skip-if "" { ! run_expensive_tests }  { "*" } { "-O0" "-O2" } } */
+/* { dg-timeout 120 { target msp430-*-* } } */
 
 typedef signed long int S;
 typedef unsigned long int U;

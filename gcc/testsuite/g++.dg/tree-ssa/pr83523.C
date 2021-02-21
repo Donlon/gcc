@@ -1,6 +1,7 @@
 // PR tree-optimization/83523
 // { dg-do compile }
 // { dg-options "-O2 -fexceptions -fnon-call-exceptions -ftrapv" }
+// { dg-require-effective-target trapping }
 
 #ifdef __SIZEOF_INT128__
 typedef __int128 T;

@@ -15,9 +15,9 @@ void abort ();
 /* Verify that ordinary library built-ins are diagnosed with -Wextra
    when they take arguments.  */
 
-void* memcpy ();    /* { dg-warning "declaration of built-in function .memcpy. without a prototype; expected .void \\\*\\\(void \\\*, const void \\\*, \(long \)*unsigned int\\\)." } */
-void* memset ();    /* { dg-warning "declaration of built-in function .memset. without a prototype; expected .void \\\*\\\(void \\\*, int, *\(long \)*unsigned int\\\)." } */
-size_t strlen ();   /* { dg-warning "declaration of built-in function .strlen. without a prototype; expected .\(long \)*unsigned int\\\(const char \\\*\\\)." } */
+void* memcpy ();    /* { dg-warning "declaration of built-in function .memcpy. without a prototype; expected .void \\\*\\\(void \\\*, const void \\\*, \(long \)*\(__int20 \)*unsigned\( int\)*\\\)." } */
+void* memset ();    /* { dg-warning "declaration of built-in function .memset. without a prototype; expected .void \\\*\\\(void \\\*, int, *\(long \)*\(__int20 \)*unsigned\( int\)*\\\)." } */
+size_t strlen ();   /* { dg-warning "declaration of built-in function .strlen. without a prototype; expected .\(long \)*\(__int20 \)*unsigned\( int\)*\\\(const char \\\*\\\)." } */
 
 /* Variadic built-ins are diagnosed even without -Wextra (they are,
    in fact, diagnosed by default).  */

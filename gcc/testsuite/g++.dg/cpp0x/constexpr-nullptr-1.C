@@ -7,6 +7,7 @@
 
 // { dg-do compile { target c++11 } }
 // { dg-options "-O1 -fdelete-null-pointer-checks -fdump-tree-optimized" }
+// { dg-skip-if "" keeps_null_pointer_checks }
 
 // Runtime assert.  Used for potentially invalid expressions.
 #define RA(e)  ((e) ? (void)0 : __builtin_abort ())

@@ -4,6 +4,7 @@
 
 // { dg-do run }
 // { dg-options "-O2" }
+// { dg-skip-if "" msp430_large_memory_model }
 
 extern "C" void abort(void);
 

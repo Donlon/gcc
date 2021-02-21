@@ -1,4 +1,5 @@
 /* { dg-do compile } */
+/* { dg-skip-if "" { keeps_null_pointer_checks } } */
 /* { dg-options "-O2 -Wsuggest-attribute=malloc -fdelete-null-pointer-checks" } */
 
 __attribute__((noinline))

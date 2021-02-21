@@ -1,4 +1,5 @@
 /* { dg-do compile } */
+/* { dg-skip-if "" { "*-*-*" } { "-mcpu=msp430" } { "" } } */
 /* { dg-final { scan-assembler ".size.*instance.*52" } } */
 
 struct t_inner

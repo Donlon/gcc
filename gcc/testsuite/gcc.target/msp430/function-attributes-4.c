@@ -66,6 +66,16 @@ fn12(void)
 { /* { dg-warning "naked functions cannot be critical" } */
 }
 
+void __attribute__((noinit))
+fn13(void)
+{ /* { dg-warning "'noinit' attribute only applies to variables" } */
+}
+
+void __attribute__((persistent))
+fn14(void)
+{ /* { dg-warning "'persistent' attribute only applies to variables" } */
+}
+
 int __attribute__((interrupt))
 isr1 (void)
 { /* { dg-warning "interrupt handlers must be void" } */

@@ -3,6 +3,12 @@
 
 int *a;
 
+#if __SIZEOF_INT__ == __SIZEOF_SHORT__
+#define T char
+#else
+#define T short
+#endif
+
 int
 foo1 (long long s, long long l)
 {
@@ -10,7 +16,7 @@ foo1 (long long s, long long l)
 
   for (i = s; i < l; i++)
     {
-      a[(short)i] = 0;
+      a[(T)i] = 0;
     }
   return 0;
 }

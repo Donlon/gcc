@@ -1,6 +1,7 @@
 /* PR rtl-optimization/33644 */
 /* { dg-do compile } */
 /* { dg-options "-O2 -ftrapv" } */
+/* { dg-require-effective-target trapping } */
 
 extern char *bar (const char *);
 

@@ -5,6 +5,7 @@
 // one in the primary template.
 // { dg-do compile }
 // { dg-options "-O -Wall -fdump-tree-optimized -fdelete-null-pointer-checks" }
+// { dg-skip-if "" keeps_null_pointer_checks }
 
 template <class T>
 void* __attribute__ ((returns_nonnull))

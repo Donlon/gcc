@@ -93,6 +93,8 @@ static tree handle_section_attribute (tree *, tree, tree, int, bool *);
 static tree handle_aligned_attribute (tree *, tree, tree, int, bool *);
 static tree handle_warn_if_not_aligned_attribute (tree *, tree, tree,
 						  int, bool *);
+static tree handle_retain_attribute (tree *, tree, tree, int, bool *);
+static tree handle_location_attribute (tree *, tree, tree, int, bool *);
 static tree handle_weak_attribute (tree *, tree, tree, int, bool *) ;
 static tree handle_noplt_attribute (tree *, tree, tree, int, bool *) ;
 static tree handle_alias_ifunc_attribute (bool, tree *, tree, tree, bool *);
@@ -459,6 +461,10 @@ const struct attribute_spec c_common_attribute_table[] =
 			      handle_nocf_check_attribute, NULL },
   { "copy",                   1, 1, false, false, false, false,
 			      handle_copy_attribute, NULL },
+  { "retain",		      0, 0, true, false, false, false,
+			      handle_retain_attribute, NULL },
+  { "location",		      1, 1, true, false, false, false,
+			      handle_location_attribute, NULL },
   { NULL,                     0, 0, false, false, false, false, NULL, NULL }
 };
 
@@ -2334,6 +2340,85 @@ handle_alias_ifunc_attribute (bool is_alias, tree *node, tree name, tree args,
 	}
     }
 
+  return NULL_TREE;
+}
+
+static tree
+handle_retain_attribute (tree * node,
+			 tree   name,
+			 tree   args,
+			 int    flags,
+			 bool *no_add_attrs)
+{
+  /* The "retain" attribute implies, and has the same restrictions as, the
+     "used" attribute.  */
+  return handle_used_attribute (node, name, args, flags, no_add_attrs);
+}
+
+static tree
+handle_location_attribute (tree * pnode,
+			   tree   name,
+			   tree   args,
+			   int    ARG_UNUSED (flags),
+			   bool *no_add_attrs)
+{
+  /* TODO TARGET_HANDLE_GENERIC_ATTRIBUTE should be backported and used instead.  */
+
+  tree node = *pnode;
+  tree loc_expr;
+  unsigned HOST_WIDE_INT loc_val;
+
+  if (TREE_CODE (node) != FUNCTION_DECL
+      && !(VAR_P (node) && TREE_STATIC (node)))
+    {
+      warning (OPT_Wattributes, "%qE attribute ignored", name);
+      *no_add_attrs = true;
+      return NULL_TREE;
+    }
+
+  gcc_assert (args);
+  loc_expr = TREE_VALUE (args);
+
+  if (loc_expr && TREE_CODE (loc_expr) != IDENTIFIER_NODE
+      && TREE_CODE (loc_expr) != FUNCTION_DECL)
+    loc_expr = default_conversion (loc_expr);
+
+  if (TREE_CODE (loc_expr) != INTEGER_CST)
+    {
+      warning (OPT_Wattributes,
+	       "%qE attribute argument value %qE is not an integer constant",
+	       name, loc_expr);
+      return NULL_TREE;
+    }
+
+  if (!TYPE_UNSIGNED (TREE_TYPE (loc_expr))
+      && tree_int_cst_sgn (loc_expr) < 0)
+    {
+      warning (OPT_Wattributes,
+	       "%qE attribute argument value %qE is negative",
+	       name, loc_expr);
+      return NULL_TREE;
+    }
+
+  loc_val = tree_to_uhwi (loc_expr);
+
+  if (loc_val > (unsigned HOST_WIDE_INT) 0xFFFFF)
+    {
+      warning (OPT_Wattributes,
+	       "%qE attribute argument value %<0x%x%> is not within the addressable "
+	       "memory range",
+	       name, loc_val);
+      return NULL_TREE;
+    }
+
+  if (!TARGET_LARGE && loc_val > (unsigned HOST_WIDE_INT) 0x10000)
+    {
+      warning (OPT_Wattributes,
+	       "%<-mlarge%> is required for placement in upper memory at "
+	       "address %<0x%x%> with the %qE attribute",
+	       loc_val, name);
+      return NULL_TREE;
+    }
 
   return NULL_TREE;
 }
@@ -3475,7 +3560,8 @@ type_valid_for_vector_size (tree type, tree atname, tree args,
        && !SCALAR_FLOAT_TYPE_P (type)
        && !FIXED_POINT_TYPE_P (type))
       || (!SCALAR_FLOAT_MODE_P (orig_mode)
-	  && GET_MODE_CLASS (orig_mode) != MODE_INT
+	  && (GET_MODE_CLASS (orig_mode) != MODE_INT
+	      && GET_MODE_CLASS (orig_mode) != MODE_PARTIAL_INT)
 	  && !ALL_SCALAR_FIXED_POINT_MODE_P (orig_mode))
       || !tree_fits_uhwi_p (TYPE_SIZE_UNIT (type))
       || TREE_CODE (type) == BOOLEAN_TYPE)

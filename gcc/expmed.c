@@ -4067,9 +4067,14 @@ expand_sdiv_pow2 (scalar_int_mode mode, rtx op0, HOST_WIDE_INT d)
     {
       temp = gen_reg_rtx (mode);
       temp = emit_store_flag (temp, LT, op0, const0_rtx, mode, 0, 1);
-      temp = expand_binop (mode, add_optab, temp, op0, NULL_RTX,
-			   0, OPTAB_LIB_WIDEN);
-      return expand_shift (RSHIFT_EXPR, mode, temp, logd, NULL_RTX, 0);
+      /* We are probably missing out on better code size by not handling this
+	 for 950530-1.c -mlarge.  This check is definitley required though.  */
+      if (temp != NULL_RTX)
+	{
+	  temp = expand_binop (mode, add_optab, temp, op0, NULL_RTX,
+			       0, OPTAB_LIB_WIDEN);
+	  return expand_shift (RSHIFT_EXPR, mode, temp, logd, NULL_RTX, 0);
+	}
     }
 
   if (HAVE_conditional_move
@@ -4103,17 +4108,22 @@ expand_sdiv_pow2 (scalar_int_mode mode, rtx op0, HOST_WIDE_INT d)
 
       temp = gen_reg_rtx (mode);
       temp = emit_store_flag (temp, LT, op0, const0_rtx, mode, 0, -1);
-      if (GET_MODE_BITSIZE (mode) >= BITS_PER_WORD
-	  || shift_cost (optimize_insn_for_speed_p (), mode, ushift)
-	     > COSTS_N_INSNS (1))
-	temp = expand_binop (mode, and_optab, temp, gen_int_mode (d - 1, mode),
-			     NULL_RTX, 0, OPTAB_LIB_WIDEN);
-      else
-	temp = expand_shift (RSHIFT_EXPR, mode, temp,
-			     ushift, NULL_RTX, 1);
-      temp = expand_binop (mode, add_optab, temp, op0, NULL_RTX,
-			   0, OPTAB_LIB_WIDEN);
-      return expand_shift (RSHIFT_EXPR, mode, temp, logd, NULL_RTX, 0);
+      /* We are probably missing out on better code size by not handling this
+	 for 950530-1.c -mlarge.  This check is definitley required though.  */
+      if (temp != NULL_RTX)
+	{
+	  if (GET_MODE_BITSIZE (mode) >= BITS_PER_WORD
+	      || shift_cost (optimize_insn_for_speed_p (), mode, ushift)
+	      > COSTS_N_INSNS (1))
+	    temp = expand_binop (mode, and_optab, temp, gen_int_mode (d - 1, mode),
+				 NULL_RTX, 0, OPTAB_LIB_WIDEN);
+	  else
+	    temp = expand_shift (RSHIFT_EXPR, mode, temp,
+				 ushift, NULL_RTX, 1);
+	  temp = expand_binop (mode, add_optab, temp, op0, NULL_RTX,
+			       0, OPTAB_LIB_WIDEN);
+	  return expand_shift (RSHIFT_EXPR, mode, temp, logd, NULL_RTX, 0);
+	}
     }
 
   label = gen_label_rtx ();

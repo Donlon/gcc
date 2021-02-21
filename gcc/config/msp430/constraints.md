@@ -18,6 +18,7 @@
 ;; along with GCC; see the file COPYING3.  If not see
 ;; <http://www.gnu.org/licenses/>.
 
+;; FIXME - What's the point of these R12 and R13 constraints?
 (define_register_constraint "R12" "R12_REGS"
   "Register R12.")
 
@@ -25,15 +26,16 @@
   "Register R13.")
 
 (define_constraint "K"
-  "Integer constant 1."
+  "Integer constant 1-19."
   (and (match_code "const_int")
-       (match_test "IN_RANGE (ival, 1, 1)")))
+       (match_test "IN_RANGE (ival, 1, 19)")))
 
 (define_constraint "L"
   "Integer constant -1^20..1^19."
   (and (match_code "const_int")
        (match_test "IN_RANGE (ival, HOST_WIDE_INT_M1U << 20, 1 << 19)")))
 
+;; Valid shift amount for RRUM, RRAM, RLAM, RRCM.
 (define_constraint "M"
   "Integer constant 1-4."
   (and (match_code "const_int")
@@ -49,6 +51,11 @@
   (and (match_code "const_int")
        (match_test "IN_RANGE (ival, 256, 65535)")))
 
+(define_constraint "P"
+  "Integer constant 1-16."
+  (and (match_code "const_int")
+       (match_test "IN_RANGE (ival, 1, 16)")))
+
 ;; We do not allow arbitrary constants, eg symbols or labels,
 ;; because their address may be above the 16-bit address limit
 ;; supported by the offset used in the MOVA instruction.
@@ -58,8 +65,10 @@
        (ior (match_code "reg" "0")
 	    (and (match_code "plus" "0")
 		 (match_code "reg" "00")
-		 (match_test ("CONST_INT_P (XEXP (XEXP (op, 0), 1))")))
+		 (match_test ("CONST_INT_P (XEXP (XEXP (op, 0), 1))"))
+		 (match_test ("IN_RANGE (INTVAL (XEXP (XEXP (op, 0), 1)), HOST_WIDE_INT_M1U << 15, (1 << 15)-1)")))
 	    (match_test "CONSTANT_P (XEXP (op, 0))")
+	    (match_code "post_inc" "0")
 	    )))
 
 (define_constraint "Yl"
@@ -79,6 +88,7 @@
 		  (match_test ("CONST_INT_P (XEXP (XEXP (op, 0), 1))"))
 		  (match_test ("IN_RANGE (INTVAL (XEXP (XEXP (op, 0), 1)), HOST_WIDE_INT_M1U << 15, (1 << 15)-1)"))))
 	(match_code "reg" "0")
+	(match_code "post_inc" "0")
 	)))
 
 (define_constraint "Yc"

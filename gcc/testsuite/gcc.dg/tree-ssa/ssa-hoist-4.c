@@ -19,6 +19,13 @@ NumSift (long *array, int b, unsigned long k)
        tem1 = MAX (array[k+1], tem1)
      return tem1;  */
 
-/* { dg-final { scan-tree-dump-times "= \\*" 2 "optimized" } } */
-/* { dg-final { scan-tree-dump-times "MAX_EXPR" 1 "optimized" } } */
+/* These two fail if long > sizetype. k has to keep getting cast to sizetype,
+   which requires an extra temporary variable and GCC isnt smart enough to
+   recognize these can be merged. Or maybe it is being correctly cautious.
+   Of course, an index with a max value > max size type would get wrapped (?)
+   anyway.
+   Passes if k is made unsigned int and the "L" is removed from the literal
+   in the array index. */
+/* { dg-final { scan-tree-dump-times "= \\*" 2 "optimized" { xfail msp430-*-* } } } */
+/* { dg-final { scan-tree-dump-times "MAX_EXPR" 1 "optimized" { xfail msp430-*-* } } } */
 /* { dg-final { scan-tree-dump-times "= PHI" 1 "optimized" } } */

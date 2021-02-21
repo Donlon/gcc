@@ -1,4 +1,5 @@
 // { dg-do compile }
+// { dg-require-effective-target trapping }
 // { dg-additional-options "-ftrapv" }
 
 void doSomething(int dim, double *Y, double *A) 

@@ -2,6 +2,7 @@
 /* { dg-do run } */
 /* { dg-shouldfail "trapv" } */
 /* { dg-options "-ftrapv" } */
+/* { dg-require-effective-target trapping } */
 
 int
 main ()

@@ -44,32 +44,68 @@ extern bool msp430x;
     }                                           \
   while (0)
 
+extern const char * msp430_select_hwmult_lib (int, const char **);
+extern const char * msp430_select_cpu (int, const char **);
+extern const char * msp430_check_path_for_devices (int, const char **);
+extern const char * msp430_get_linker_devices_include_path (int, const char **);
+extern const char * msp430_check_lower_region_prefix(int, const char **);
+
+# define EXTRA_SPEC_FUNCTIONS				\
+  { "msp430_hwmult_lib", msp430_select_hwmult_lib }, \
+  { "msp430_select_cpu", msp430_select_cpu }, \
+  { "msp430_check_path_for_devices", msp430_check_path_for_devices }, \
+  { "msp430_get_linker_devices_include_path", \
+    msp430_get_linker_devices_include_path }, \
+  { "msp430_check_lower_region_prefix", msp430_check_lower_region_prefix },
+
 #undef  STARTFILE_SPEC
-#define STARTFILE_SPEC "%{pg:gcrt0.o%s}%{!pg:%{minrt:crt0-minrt.o%s}%{!minrt:crt0.o%s}} %{!minrt:crtbegin.o%s}"
+#define STARTFILE_SPEC "%{pg:gcrt0.o%s; :crt0.o%s} " \
+  "%{fexceptions:crtbegin.o%s}%{!fexceptions:crtbegin_no_eh.o%s} "
 
 /* -lgcc is included because crtend.o needs __mspabi_func_epilog_1.  */
 #undef  ENDFILE_SPEC
-#define ENDFILE_SPEC "%{!minrt:crtend.o%s} %{minrt:crtn-minrt.o%s}%{!minrt:crtn.o%s} -lgcc"
+#define ENDFILE_SPEC "%{fexceptions:crtend.o%s}%{!fexceptions:crtend_no_eh.o%s} " \
+  "-lgcc"
 
 #define ASM_SPEC "-mP " /* Enable polymorphic instructions.  */ \
-  "%{mcpu=*:-mcpu=%*}%{!mcpu=*:%{mmcu=*:-mmcu=%*}} " /* Pass the CPU type on to the assembler.  */ \
+  "%{mcpu=*:-mcpu=%*} " /* Pass the CPU type on to the assembler.  */ \
   "%{mrelax=-mQ} " /* Pass the relax option on to the assembler.  */ \
   "%{mlarge:-ml} " /* Tell the assembler if we are building for the LARGE pointer model.  */ \
-  "%{!msim:-md} %{msim:%{mlarge:-md}} " /* Copy data from ROM to RAM if necessary.  */ \
   "%{msilicon-errata=*:-msilicon-errata=%*} " /* Pass on -msilicon-errata.  */ \
   "%{msilicon-errata-warn=*:-msilicon-errata-warn=%*} " /* Pass on -msilicon-errata-warn.  */ \
   "%{ffunction-sections:-gdwarf-sections} " /* If function sections are being created then create DWARF line number sections as well.  */ \
+  "%{minrt:-mi} " /* Pass on -minrt.  */ \
   "%{mdata-region=*:-mdata-region=%*} " /* Pass on -mdata-region.  */
 
 /* Enable linker section garbage collection by default, unless we
    are creating a relocatable binary (gc does not work) or debugging
-   is enabled  (the GDB testsuite relies upon unused entities not being deleted).  */
-#define LINK_SPEC "%{mrelax:--relax} %{mlarge:%{!r:%{!g:--gc-sections}}} " \
-  "%{mcode-region=*:--code-region=%*} %{mdata-region=*:--data-region=%*}"
+   is enabled  (the GDB testsuite relies upon unused entities not being deleted).
+   Passing --code/data-region=lower to the linker will add the .lower prefix to
+   all the relevant sections, so only pass it if the lower region prefix was
+   explicitly requested.  */
+#define LINK_SPEC "%{mrelax:--relax} %{!mno-gc:%{!r:%{!g:--gc-sections}}} " \
+  "%{mcode-region=*:--code-region=%:msp430_check_lower_region_prefix(%{mcode-region=*:%*} " \
+    "%{muse-lower-region-prefix})} " \
+  "%{mdata-region=*:--data-region=%:msp430_check_lower_region_prefix(%{mdata-region=*:%*} " \
+    "%{muse-lower-region-prefix})} " \
+  "%{mtiny-printf:--wrap puts --wrap printf} " \
+  "%:msp430_get_linker_devices_include_path(%{L*:%*})"
 
-extern const char * msp430_select_hwmult_lib (int, const char **);
-# define EXTRA_SPEC_FUNCTIONS				\
-  { "msp430_hwmult_lib", msp430_select_hwmult_lib },
+#define DRIVER_SELF_SPECS \
+  " %{I*:%:msp430_check_path_for_devices(%{I*:%*})}"       \
+  " %{L*:%:msp430_check_path_for_devices(%{L*:%*})}"       \
+  " %{!mlarge:%{mcode-region=*:%{mdata-region=*:"	\
+    "%e-mcode-region and -mdata-region require the large memory model (-mlarge)}}}" \
+  " %{!mlarge:%{mcode-region=*:"	\
+    "%e-mcode-region requires the large memory model (-mlarge)}}"	\
+  " %{!mlarge:%{mdata-region=*:"	\
+    "%e-mdata-region requires the large memory model (-mlarge)}}"	\
+  " %{!mcpu=*:%{mmcu=*:%:msp430_select_cpu(%{mmcu=*:%*})}}"
+
+#undef  CC1PLUS_SPEC
+#define CC1PLUS_SPEC                                    \
+  "%(cc1) "                                             \
+  "%{!fexceptions:-fno-exceptions} "
 
 /* Specify the libraries to include on the linker command line.
 
@@ -159,10 +195,16 @@ extern const char * msp430_select_hwmult_lib (int, const char **);
 #define PTR_SIZE			(TARGET_LARGE ? 4 : 2)
 #define	POINTERS_EXTEND_UNSIGNED	1
 
-/* TARGET_VTABLE_ENTRY_ALIGN defaults to POINTER_SIZE, which is 20 for
-   TARGET_LARGE.  Pointer alignment is always 16 for MSP430, so set explicitly
-   here.  */
+/* The default value of TARGET_VTABLE_ENTRY_ALIGN is POINTER_SIZE, which for
+   TARGET_LARGE is 20, which causes problems.  */
+#ifdef TARGET_LARGE
 #define TARGET_VTABLE_ENTRY_ALIGN 16
+#endif
+
+/* Transactional memory is not supported for msp430. Set USE_TM_CLONE_REGISTRY
+   to 0 here so tm_clone table and (de)register_tm_clones are removed from
+   crt{begin,end}.o.  */
+#define USE_TM_CLONE_REGISTRY 0
 
 #define ADDR_SPACE_NEAR	1
 #define ADDR_SPACE_FAR	2
@@ -185,9 +227,11 @@ extern const char * msp430_select_hwmult_lib (int, const char **);
 /* Layout of Source Language Data Types */
 
 #undef  SIZE_TYPE
-#define SIZE_TYPE			(TARGET_LARGE ? "__int20 unsigned" : "unsigned int")
+#define SIZE_TYPE			(TARGET_LARGE \
+					 ? "__int20__ unsigned" \
+					 : "unsigned int")
 #undef  PTRDIFF_TYPE
-#define PTRDIFF_TYPE			(TARGET_LARGE ? "__int20" : "int")
+#define PTRDIFF_TYPE			(TARGET_LARGE ? "__int20__" : "int")
 #undef  WCHAR_TYPE
 #define WCHAR_TYPE			"long int"
 #undef  WCHAR_TYPE_SIZE
@@ -220,6 +264,28 @@ extern const char * msp430_select_hwmult_lib (int, const char **);
   "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7",		\
     "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15",	\
   "argptr"							\
+}
+
+/* Allow lowercase "r" to be used in register names instead of upper
+   case "R".  */
+#define ADDITIONAL_REGISTER_NAMES	\
+{					\
+    { "r0",  0 },			\
+    { "r1",  1 },			\
+    { "r2",  2 },			\
+    { "r3",  3 },			\
+    { "r4",  4 },			\
+    { "r5",  5 },			\
+    { "r6",  6 },			\
+    { "r7",  7 },			\
+    { "r8",  8 },			\
+    { "r9",  9 },			\
+    { "r10", 10 },			\
+    { "r11", 11 },			\
+    { "r12", 12 },			\
+    { "r13", 13 },			\
+    { "r14", 14 },			\
+    { "r15", 15 }			\
 }
 
 enum reg_class
@@ -380,14 +446,17 @@ typedef struct
 #define ASM_OUTPUT_LABELREF(FILE, SYM) msp430_output_labelref ((FILE), (SYM))
 
 #define ASM_OUTPUT_ADDR_VEC_ELT(FILE, VALUE) \
-  fprintf (FILE, "\t.long .L%d\n", VALUE)
+  (TARGET_LARGE ? fprintf (FILE, "\t.long .L%d\n", VALUE) \
+   : fprintf (FILE, "\t.word .L%d\n", VALUE))
 
 /* This is how to output an element of a case-vector that is relative.
    Note: The local label referenced by the "3b" below is emitted by
    the tablejump insn.  */
 
 #define ASM_OUTPUT_ADDR_DIFF_ELT(FILE, BODY, VALUE, REL) \
-  fprintf (FILE, "\t.long .L%d - 1b\n", VALUE)
+  (TARGET_LARGE ? fprintf (FILE, "\t.long .L%d - 1b\n", VALUE) \
+   : fprintf (FILE, "\t.word .L%d - 1b\n", VALUE))
+
 
 
 #define ASM_OUTPUT_ALIGN(STREAM, LOG)		\
@@ -418,6 +487,26 @@ typedef struct
 
 #define ACCUMULATE_OUTGOING_ARGS 1
 
+/* FIXME define BRANCH_COST and maybe get rid of this to allow the definition
+   in fold-const.c to takeover.  */
+/* Don't know what this does so disable since it doesnt have any positive
+   (or apparently negative) effect.  */
+#if 0
+#define LOGICAL_OP_NON_SHORT_CIRCUIT 0
+#endif
+
+#define HAVE_POST_INCREMENT 1
+
+/* This (unsurprisingly) improves code size in the vast majority of cases, we
+   want to prevent any instructions using a "store post increment" from being
+   generated.  These will have to later be reloaded since msp430 does not
+   support post inc for the destination operand.  */
+#define USE_STORE_POST_INCREMENT(MODE)  0
+
+/* Many other targets set USE_LOAD_POST_INCREMENT to 0.  For msp430-elf
+   the benefit of disabling it is not clear.  When looking at code size, on
+   average, there is a slight advantage to leaving it enabled.  */
+
 #undef  ASM_DECLARE_FUNCTION_NAME
 #define ASM_DECLARE_FUNCTION_NAME(FILE, NAME, DECL) \
   msp430_start_function ((FILE), (NAME), (DECL))
@@ -427,5 +516,11 @@ typedef struct
 #undef  USE_SELECT_SECTION_FOR_FUNCTIONS
 #define USE_SELECT_SECTION_FOR_FUNCTIONS 1
 
+void msp430_register_pre_includes (const char *sysroot, const char *iprefix,
+    int stdinc);
+#define TARGET_EXTRA_PRE_INCLUDES msp430_register_pre_includes
+
 #define ASM_OUTPUT_ALIGNED_DECL_COMMON(FILE, DECL, NAME, SIZE, ALIGN)	\
   msp430_output_aligned_decl_common ((FILE), (DECL), (NAME), (SIZE), (ALIGN))
+
+#define SYMBOL_FLAG_LOW_MEM (SYMBOL_FLAG_MACH_DEP << 0)

@@ -1,5 +1,6 @@
 /* PR tree-optimization/89278 */
 /* { dg-do compile } */
+/* { dg-require-effective-target trapping } */
 /* { dg-options "-O1 -ftrapv -ftree-loop-distribute-patterns --param max-loop-header-insns=2" } */
 
 void

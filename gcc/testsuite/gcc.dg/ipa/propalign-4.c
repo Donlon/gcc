@@ -20,4 +20,4 @@ main()
   test (&aa[3]);
   return 0;
 }
-/* { dg-final { scan-ipa-dump "align: 8, misalign: 4"  "cp"  } } */
+/* { dg-final { scan-ipa-dump "align: 8, misalign: 4"  "cp" { xfail msp430-*-* } } } */

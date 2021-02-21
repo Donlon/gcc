@@ -1,5 +1,6 @@
 // PR c++/88482
 // { dg-do compile }
+// { dg-require-effective-target exceptions_enabled }
 
 extern "C" int __cxa_throw (void *, void *, void (*) (void *));	// { dg-error "declared incorrectly" }
 extern "C" void *__cxa_get_exception_ptr (void *);

@@ -1,3 +1,6 @@
+/newlib
+/libgloss
+
 *.diff
 *.patch
 *.orig

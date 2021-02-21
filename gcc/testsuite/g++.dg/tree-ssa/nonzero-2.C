@@ -1,5 +1,6 @@
 /* { dg-do compile } */
 /* { dg-options "-O2 -fdump-tree-ccp1 -fdelete-null-pointer-checks" } */
+/* { dg-skip-if "" keeps_null_pointer_checks } */
 struct t
 {
   static inline void tt()

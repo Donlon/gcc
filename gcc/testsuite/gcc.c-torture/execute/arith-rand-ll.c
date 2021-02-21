@@ -1,3 +1,5 @@
+/* { dg-timeout 120 { target msp430-*-* } } */
+
 long long
 simple_rand ()
 {

@@ -1,9 +1,15 @@
 /* { dg-do compile } */
 /* { dg-options "-O -fdump-tree-optimized" } */
 
-int foo (unsigned short a[], unsigned int x)
+#if __SIZEOF_INT__ == __SIZEOF_SHORT__
+#define T long 
+#else
+#define T int
+#endif
+
+T foo (unsigned short a[], unsigned T x)
 {
-  unsigned int i;
+  unsigned T i;
   for (i = 0; i < 1000; i++)
     {
       x = a[i];

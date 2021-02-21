@@ -6,6 +6,7 @@ _Static_assert (__INT_MAX__ * 2, "overflow"); /* { dg-warning "integer overflow 
 /* { dg-error "overflow in constant expression" "error" { target *-*-* } .-1 } */
 
 _Static_assert ((void *)(__SIZE_TYPE__)16, "non-integer"); /* { dg-error "not an integer" } */
+                      
 
 _Static_assert (1.0, "non-integer"); /* { dg-error "not an integer" } */
 

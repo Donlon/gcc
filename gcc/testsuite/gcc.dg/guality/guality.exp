@@ -8,6 +8,11 @@ if { [istarget *-*-darwin*] } {
     return
 }
 
+# Skip on msp430
+if { [istarget msp430-*-*] } {
+    return
+}
+
 if { [istarget "powerpc-ibm-aix*"] } {
     set torture_execute_xfail "powerpc-ibm-aix*"
     return

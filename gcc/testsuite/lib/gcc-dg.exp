@@ -333,6 +333,26 @@ proc gcc-dg-test-1 { target_compile prog do_what extra_tool_flags } {
 		  [$target_compile "$object_file" "$output_file" \
 		       "executable" $options] ]
     }
+    
+    switch $do_what {
+	"assemble" -
+	"link" -
+	"run" {
+          #set size_output [remote_exec host "/usr/bin/size" "$output_file"]
+          #if { [lindex $size_output 0] != 0 } {
+              #verbose "error computing size for $output_file using /usr/bin/size"
+              #verbose "  output is: [lindex $size_output 1]"
+          #} else {
+              #log_size [testname-for-summary] [lindex $size_output 1]
+          #}
+	}
+    }
+    #switch $do_what {
+	#"link" -
+	#"run" {
+			#verbose [remote_exec host "/home/jozef/msp430/workspace/9.2.0-upgrade/20020108-1/get-size-of-main.sh" "$output_file" [testname-for-summary]]
+      #}
+  #}
 
     return [list $comp_output $output_file]
 }
@@ -420,6 +440,16 @@ proc gcc-dg-prune { system text } {
 	    [string match "*exceeds local store*" $text]} {
 	# The format here is important.  See dg.exp.
 	return "::unsupported::memory full"
+    }
+
+    # If exceptions are disabled, mark tests expecting exceptions to be enabled
+    # as unsupported.
+    if [regexp "(^|\n)\[^\n\]*: error: exception handling disabled" $text] {
+	return "::unsupported::exception handling disabled"
+    }
+
+    if [regexp "(^|\n)\[^\n\]*: error: #error .__cpp_exceptions." $text] {
+	return "::unsupported::exception handling disabled"
     }
 
     return $text
